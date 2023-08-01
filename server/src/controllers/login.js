@@ -31,10 +31,26 @@ export const register = async (req, res) => {
 
 
 
-export const login = async (req, res) => {
-    const user = await cleaner.findOne({email: req.body.email});
-    if (user){
-        const accessToken = jwt.sign()
+  
+  export const login = async (req, res) => {
+    try{
+      const user = await cleaner.findOne({email: req.body.email});
+      if (user){
+         const pass = await bcrypt.compare(req.body.password, user.password)
+         if(pass){
+          const accesstoken = jwt.sign({
+            email: user.email
+          }, '1234', {expiresIn: "3d"})
+          const {password, ...others} = user._doc
+          res.status(200).json({...others, accesstoken})
+         } else {
+          res.status(401).json("Wrong credentials")
+         }
+      } else{
+        res.status(401).json("Wrong credentials")
+      }
+    } catch(err){
+      res.status(500).json({error: err.message})
     }
-    
-}
+      
+  }
